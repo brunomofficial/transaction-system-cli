@@ -102,4 +102,51 @@ def send_to_acc(sender, receiver, send_amount):
     except SQLITE_ERROR:
         print("Something went wrong please try again")
 
+def deposit_from_acc(id, amount):
+    if not id_found(id):
+        print("Error occurred, account not found")
+        return
+
+    if amount <= 0:
+        print("Amount must be greater than 0")
+        return
+
+    balance = get_bal(id)
+
+    try:
+        balance = balance + amount
+
+        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, id))
+        conn.commit()
+
+        print(f"Successfully deposited {amount}, new balance is {balance}")
+
+    except SQLITE_ERROR:
+        print("Something went wrong, please try again")
+
+
+
+def withdraw_from_acc(id, amount):
+    if not id_found(id):
+        print("Error occurred, account not found")
+        return
+    if amount <= 0:
+        print("Amount must be greater than 0")
+        return
+    if amount > get_bal(id):
+        print("Amount greater than your balance, please try again")
+        return
+
+    balance = get_bal(id)
+
+    try:
+        balance = balance - amount
+        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, id))
+        conn.commit()
+
+        print(f"Successfully sent {amount}, your new balance is {balance}")
+
+    except SQLITE_ERROR:
+        print("Something went wring please try again")
+
 

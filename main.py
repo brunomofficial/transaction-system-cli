@@ -7,6 +7,10 @@ def lines():
 def to_num(user_input):
     try:
         user_input = int(user_input)
+        if user_input < 0:
+            print("Amount cannot be less than 0")
+            return None
+
         return user_input
 
     except ValueError:
@@ -68,8 +72,8 @@ def home_menu(id_input):
     match choice:
         case '1': account_info(id)
         case '2': send(id)
-        case '3': deposit()
-        case '4': withdraw()
+        case '3': deposit(id)
+        case '4': withdraw(id)
         case '5': main()
 
 
@@ -149,7 +153,7 @@ def send(id):
 
 
     print(f"Send {amount} to {receiver_acc}?, enter 1 to confirm or 0 to cancel")
-    confirm_send = input("_Confirm?")
+    confirm_send = input("_Confirm? > ")
 
     if confirm_send == '1':
         cred.send_to_acc(id, receiver_acc, amount)
@@ -158,10 +162,45 @@ def send(id):
         home_menu(id)
 
 
-def deposit():
-    pass
-def withdraw():
-    pass
+def deposit(id):
+    lines()
+    amount = input("Enter amount to deposit or 0 to go back> ").strip()
+    if amount == "":
+        print("Please enter an amount")
+        deposit(id)
+    if amount == '0':
+        home_menu(id)
+    if not to_num(amount):
+        print("Please enter a valid amount")
+        deposit(id)
+
+    amount = to_num(amount)
+
+    cred.deposit_from_acc(id, amount)
+
+    home_menu(id)
+
+
+def withdraw(id):
+    lines()
+    amount = input("Enter amount to withdraw or 0 to go back> ").strip()
+    if amount == "":
+        print("Please enter an amount")
+        deposit(id)
+    if amount == '0':
+        home_menu(id)
+    if not to_num(amount):
+        print("Please enter a valid amount")
+        deposit(id)
+
+    if not to_num(amount):
+        print("Please enter a valid amount")
+        withdraw(id)
+
+    amount = to_num(amount)
+    cred.withdraw_from_acc(id, amount)
+
+    home_menu(id)
 
 lines()
 print("\tWELCOME")
@@ -179,7 +218,9 @@ def main():
             register()
         case '3':
             forgot_password()
-        case '4': exit(0)
+        case '4':
+            print("Bye")
+            exit(0)
         case _:
             main()
 
