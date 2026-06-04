@@ -1,6 +1,6 @@
 import sqlite3
 from sqlite3 import SQLITE_ERROR
-
+from datetime import datetime
 import bcrypt
 from datetime import datetime
 
@@ -50,17 +50,21 @@ def validate_user(id_input, password_input):
 def sign_up_user(name_input, password_input, confirm_input):
     if name_input == "":
         print("Please enter a name")
+        return
     if password_input != confirm_input:
         print("Passwords must be similar")
+        return
     else:
         password_hash = bcrypt.hashpw(password_input.encode(), bcrypt.gensalt()).decode()
         now = str(datetime.now())
 
-        cursor.execute("INSERT INTO users (name, password_hash, balance, date_created) VALUES (?,?,?,?)",
-                       (name_input, password_hash, 0, now))
+        cursor.execute("INSERT INTO users (name, password_hash, balance, date_created, transactions) VALUES (?,?,?,?,?)",
+                       (name_input, password_hash, 0, now, "_"))
         conn.commit()
 
         print(f"Added successfully, welcome {name_input}")
+
+
 
 def add_new_password(id, current_password):
     password_hash = bcrypt.hashpw(current_password.encode(), bcrypt.gensalt()).decode()
@@ -69,7 +73,7 @@ def add_new_password(id, current_password):
         cursor.execute("UPDATE users SET password_hash = (?) WHERE id = (?)", (password_hash, id))
         conn.commit()
         print("Password changed successfully")
-    except SQLITE_ERROR:
+    except sqlite3.Error:
         print("Something went wrong please try again")
 
 
@@ -77,6 +81,7 @@ def get_bal(id):
     cursor.execute("SELECT balance FROM users WHERE id = (?)", (id,))
     bal = cursor.fetchone()[0]
     return bal
+
 
 def send_to_acc(sender, receiver, send_amount):
     if not id_found(receiver):
@@ -97,12 +102,21 @@ def send_to_acc(sender, receiver, send_amount):
         cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (sender_balance, sender))
         cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (receiver_balance, receiver))
         conn.commit()
-        print(f"SUCCESSFULLY SENT {send_amount} to {receiver}")
+        print(f"SUCCESSFULLY SENT ${send_amount} to account-{receiver} your new balance is ${sender_balance}")
+        now = str(datetime.now())
 
-    except SQLITE_ERROR:
+        sender_transaction = f"__Sent {send_amount} to acc:{receiver} at {now}, balance: {sender_balance}__"
+        receiver_transaction = f"__Received {send_amount} from acc:{sender} at {now}, balance: {receiver_balance}__"
+
+        add_transaction(sender, sender_transaction)
+        add_transaction(receiver, receiver_transaction)
+
+    except sqlite3.Error:
         print("Something went wrong please try again")
 
-def deposit_from_acc(id, amount):
+
+
+def deposit_to_acc(id, amount):
     if not id_found(id):
         print("Error occurred, account not found")
         return
@@ -119,10 +133,15 @@ def deposit_from_acc(id, amount):
         cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, id))
         conn.commit()
 
-        print(f"Successfully deposited {amount}, new balance is {balance}")
+        print(f"Successfully deposited {amount}, new balance is ${balance}")
+        now = str(datetime.now())
+        transaction = f"__Deposited {amount} to account at {now} new balance: ${balance}"
+        add_transaction(id, transaction)
 
-    except SQLITE_ERROR:
+    except sqlite3.Error:
         print("Something went wrong, please try again")
+
+
 
 
 
@@ -144,9 +163,27 @@ def withdraw_from_acc(id, amount):
         cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, id))
         conn.commit()
 
-        print(f"Successfully sent {amount}, your new balance is {balance}")
+        print(f"Successfully withdrew {amount}, your new balance is ${balance}")
 
-    except SQLITE_ERROR:
-        print("Something went wring please try again")
+        now = str(datetime.now())
+        transaction = f"__Withdrew {amount} from account at {now} new balance: ${balance}__"
+        add_transaction(id, transaction)
 
+    except sqlite3.Error:
+        print("Something went wrong please try again")
+
+
+def add_transaction(id, new_transaction):
+    try:
+        current_transactions = str(cursor.execute("SELECT transactions FROM users WHERE id = (?)", (id,)).fetchone()[0])
+        transactions = current_transactions + new_transaction
+
+        cursor.execute("UPDATE users SET transactions = (?) WHERE id = (?)", (transactions, id))
+        conn.commit()
+
+    except sqlite3.Error:
+        return
+
+def get_transactions(id):
+    cursor.execute("SELECT transactions FROM users WHERE id = (?)", (id,)).fetchone()
 

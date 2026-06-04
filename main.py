@@ -1,4 +1,5 @@
 import cred
+from datetime import datetime
 
 
 def lines():
@@ -34,7 +35,6 @@ def sign_in():
     password_input = input("_Enter password> ").strip()
 
     if cred.validate_user(id_input, password_input):
-        lines()
         print("Logged in successfully")
         name = cred.get_name(id_input)
         print(f"WELCOME {name}")
@@ -58,15 +58,13 @@ def register():
 
 
 def forgot_password():
+    lines()
     main()
 
 
-def home_menu(id_input):
-    home_menu_list: str = "1. My Account\n2. Send\n3. Deposit\n4. Withdraw\n5. Log Out"
-
-    id = id_input
-
-    print(home_menu_list)
+def home_menu(id):
+    lines()
+    print("1. My Account\n2. Send\n3. Deposit\n4. Withdraw\n0. Log Out")
     choice = input("Enter choice> ").strip()
 
     match choice:
@@ -74,26 +72,31 @@ def home_menu(id_input):
         case '2': send(id)
         case '3': deposit(id)
         case '4': withdraw(id)
-        case '5': main()
+        case '0': main()
 
 
 def change_password(id):
+    lines()
     user_id = id
-    current_password = input("_Enter your current password>")
+    current_password = input("_Enter your current password or 0 to go back>")
 
     if current_password == "":
         print("Please enter a valid password")
-        change_password(user_id)
+        account_info(user_id)
+
+    if current_password == '0':
+        account_info(id)
 
     if not cred.validate_user(id, current_password):
         print("Invalid password, please try again")
+        account_info(id)
     else:
         new_password=input("_Enter new password>")
         new_password2=input("_Confirm new password>")
 
         if new_password != new_password2:
             print("Password didn't match, please try again")
-            change_password(user_id)
+            account_info(user_id)
         else:
             cred.add_new_password(user_id, new_password)
             main()
@@ -101,16 +104,14 @@ def change_password(id):
 
 def account_info(id):
     lines()
-
-    print("1. Check Balance\n2. Change password\n3. Change credentials\n4. Transaction history\n5. Back")
-
+    print("1. Check Balance\n2. Change password\n3. Change credentials\n4. Transaction history\n0. Back")
     choice: str= input("Enter choice> ").strip()
 
     match choice:
         case '1':
             balance = cred.get_bal(id)
             lines()
-            print(f"\tYour balance is ${balance}")
+            print(f"Your balance is ${balance}")
             lines()
             account_info(id)
         case '2':
@@ -119,19 +120,22 @@ def account_info(id):
             change_creds(id)
         case '4':
             view_transaction_history(id)
-        case '5':
+        case '0':
             home_menu(id)
         case _:
             print("Invalid input, please try again")
             account_info(id)
 
 def change_creds(id):
+    lines()
     pass
 
 def view_transaction_history(id):
+    lines()
     pass
 
 def send(id):
+    lines()
     receiver_acc = input("_Enter receiver account or 0 to go back>")
     if receiver_acc == "0":
         home_menu(id)
@@ -175,9 +179,7 @@ def deposit(id):
         deposit(id)
 
     amount = to_num(amount)
-
-    cred.deposit_from_acc(id, amount)
-
+    cred.deposit_to_acc(id, amount)
     home_menu(id)
 
 
@@ -199,7 +201,6 @@ def withdraw(id):
 
     amount = to_num(amount)
     cred.withdraw_from_acc(id, amount)
-
     home_menu(id)
 
 lines()
@@ -208,7 +209,7 @@ lines()
 
 def main():
     lines()
-    print("1. Sign in\n2. Register\n3. Forgot password\n4. exit")
+    print("1. Sign in\n2. Register\n3. Forgot password\n0. exit")
     choice = input("Enter an option> ").strip()
 
     match choice:
@@ -218,12 +219,11 @@ def main():
             register()
         case '3':
             forgot_password()
-        case '4':
+        case '0':
             print("Bye")
             exit(0)
         case _:
             main()
-
 
 if __name__ == "__main__":
     main()
