@@ -56,12 +56,6 @@ def register():
 
     main()
 
-
-def forgot_password():
-    lines()
-    main()
-
-
 def home_menu(id):
     lines()
     print("1. My Account\n2. Send\n3. Deposit\n4. Withdraw\n0. Log Out")
@@ -128,11 +122,37 @@ def account_info(id):
 
 def change_creds(id):
     lines()
-    pass
+    choice = input("_Enter credential to change: 1. Name 2. Clear transaction history > ")
+    if choice == "" or choice not in('1', '2'):
+        print("Please enter a valid choice")
+        account_info(id)
+
+    if choice == '1':
+        new_name = input("Enter new name> ")
+        confirmation = input("Enter 1 to confirm or 0 to go back > ")
+        if confirmation == '1':
+            cred.change_name(id, new_name)
+            account_info(id)
+        else:
+            account_info(id)
+
+    elif choice == '2':
+        confirmation = input("Enter 1 to confirm or 0 to go back > ")
+        if confirmation == '1':
+            cred.clear_transactions(id)
+            account_info(id)
+        else:
+            account_info(id)
+
+
 
 def view_transaction_history(id):
     lines()
-    pass
+    print("Your transactions: ")
+    transactions = cred.get_transactions(id)
+    if transactions:  print(transactions)
+    account_info(id)
+
 
 def send(id):
     lines()
@@ -209,7 +229,7 @@ lines()
 
 def main():
     lines()
-    print("1. Sign in\n2. Register\n3. Forgot password\n0. exit")
+    print("1. Sign in\n2. Register\n0. exit")
     choice = input("Enter an option> ").strip()
 
     match choice:
@@ -217,8 +237,6 @@ def main():
             sign_in()
         case '2':
             register()
-        case '3':
-            forgot_password()
         case '0':
             print("Bye")
             exit(0)

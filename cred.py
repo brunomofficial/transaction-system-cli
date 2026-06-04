@@ -76,6 +76,20 @@ def add_new_password(id, current_password):
     except sqlite3.Error:
         print("Something went wrong please try again")
 
+def change_name(id, new_name):
+    current_name = get_name(id)
+    if current_name == new_name:
+        print("New name same to current name")
+        return
+
+    try:
+        cursor.execute("UPDATE users SET name = (?) WHERE id = (?)", (new_name, id))
+        conn.commit()
+
+        print(f"Name updated successfully to {new_name}")
+    except sqlite3.Error as e:
+        print("Something went wrong, please try again")
+
 
 def get_bal(id):
     cursor.execute("SELECT balance FROM users WHERE id = (?)", (id,))
@@ -86,6 +100,9 @@ def get_bal(id):
 def send_to_acc(sender, receiver, send_amount):
     if not id_found(receiver):
         print("Something went wrong please try again")
+        return
+    if sender == receiver:
+        print("Error, can't send to your own account")
         return
 
     sender_balance = get_bal(sender)
@@ -185,5 +202,9 @@ def add_transaction(id, new_transaction):
         return
 
 def get_transactions(id):
-    cursor.execute("SELECT transactions FROM users WHERE id = (?)", (id,)).fetchone()
+    transactions = cursor.execute("SELECT transactions FROM users WHERE id = (?)", (id,)).fetchone()[0]
 
+    return transactions
+
+def clear_transactions(id):
+    cursor.execute("UPDATE users SET transactions = (?) WHERE id = (?)", ("_", id))

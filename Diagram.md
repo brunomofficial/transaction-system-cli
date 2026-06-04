@@ -1,9 +1,14 @@
 
-main - register - add new user
+.main -> register
+.
+.     -> sign in -> home menu -> my account  -> check balance
+.                                            -> change password
+.                                            -> change credentials
+.                                            -> transaction history
+.
+.                             -> send money
+.                             -> withdraw
+.                             -> deposit 
+.
+.                 
 
-     - forgot password
-
-     - sign in - home menu - account info - check balance, change password, change creds, transaction history
-                           - send money
-                           - withdraw
-                            -deposit
