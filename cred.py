@@ -125,9 +125,6 @@ def send_to_acc(sender, receiver, send_amount):
         sender_transaction = f"__Sent {send_amount} to acc:{receiver} at {now}, balance: {sender_balance}__"
         receiver_transaction = f"__Received {send_amount} from acc:{sender} at {now}, balance: {receiver_balance}__"
 
-        add_transaction(sender, sender_transaction)
-        add_transaction(receiver, receiver_transaction)
-
     except sqlite3.Error:
         print("Something went wrong please try again")
 
@@ -153,7 +150,6 @@ def deposit_to_acc(id, amount):
         print(f"Successfully deposited {amount}, new balance is ${balance}")
         now = str(datetime.now())
         transaction = f"__Deposited {amount} to account at {now} new balance: ${balance}"
-        add_transaction(id, transaction)
 
     except sqlite3.Error:
         print("Something went wrong, please try again")
@@ -184,27 +180,7 @@ def withdraw_from_acc(id, amount):
 
         now = str(datetime.now())
         transaction = f"__Withdrew {amount} from account at {now} new balance: ${balance}__"
-        add_transaction(id, transaction)
 
     except sqlite3.Error:
         print("Something went wrong please try again")
 
-
-def add_transaction(id, new_transaction):
-    try:
-        current_transactions = str(cursor.execute("SELECT transactions FROM users WHERE id = (?)", (id,)).fetchone()[0])
-        transactions = current_transactions + new_transaction
-
-        cursor.execute("UPDATE users SET transactions = (?) WHERE id = (?)", (transactions, id))
-        conn.commit()
-
-    except sqlite3.Error:
-        return
-
-def get_transactions(id):
-    transactions = cursor.execute("SELECT transactions FROM users WHERE id = (?)", (id,)).fetchone()[0]
-
-    return transactions
-
-def clear_transactions(id):
-    cursor.execute("UPDATE users SET transactions = (?) WHERE id = (?)", ("_", id))

@@ -1,6 +1,4 @@
 import cred
-from datetime import datetime
-
 
 def lines():
     print("------------------")
@@ -98,7 +96,7 @@ def change_password(id):
 
 def account_info(id):
     lines()
-    print("1. Check Balance\n2. Change password\n3. Change credentials\n4. Transaction history\n0. Back")
+    print("1. Check Balance\n2. Change password\n3. Change credentials\n0. Back")
     choice: str= input("Enter choice> ").strip()
 
     match choice:
@@ -112,8 +110,6 @@ def account_info(id):
             change_password(id)
         case '3':
             change_creds(id)
-        case '4':
-            view_transaction_history(id)
         case '0':
             home_menu(id)
         case _:
@@ -122,8 +118,8 @@ def account_info(id):
 
 def change_creds(id):
     lines()
-    choice = input("_Enter credential to change: 1. Name 2. Clear transaction history > ")
-    if choice == "" or choice not in('1', '2'):
+    choice = input("_Enter credential to change: 1. Name > ")
+    if choice == "" or choice not in('1'):
         print("Please enter a valid choice")
         account_info(id)
 
@@ -135,25 +131,6 @@ def change_creds(id):
             account_info(id)
         else:
             account_info(id)
-
-    elif choice == '2':
-        confirmation = input("Enter 1 to confirm or 0 to go back > ")
-        if confirmation == '1':
-            cred.clear_transactions(id)
-            account_info(id)
-        else:
-            account_info(id)
-
-
-
-def view_transaction_history(id):
-    lines()
-    print("Your transactions: ")
-    transactions = cred.get_transactions(id)
-    if transactions:  print(transactions)
-    account_info(id)
-
-
 def send(id):
     lines()
     receiver_acc = input("_Enter receiver account or 0 to go back>")
