@@ -1,13 +1,9 @@
 import sqlite3
-from sqlite3 import SQLITE_ERROR
-from datetime import datetime
 import bcrypt
 from datetime import datetime
 
 conn = sqlite3.connect("database.db")
-
 cursor = conn.cursor()
-
 
 def get_all_names():
     names_list = []
@@ -18,9 +14,12 @@ def get_all_names():
 
     return names_list
 
-def get_name(id):
-    name = cursor.execute("SELECT name FROM users where id = (?)", (id,)).fetchone()[0]
-    return name
+def get_name(user_id):
+    try:
+        name = cursor.execute("SELECT name FROM users where id = (?)", (user_id,)).fetchone()[0]
+        return name
+    except sqlite3.Error:
+        print("Failed to get name")
 
 def get_all_ids():
     ids_list = []
@@ -30,8 +29,8 @@ def get_all_ids():
 
     return ids_list
 
-def id_found(id):
-    if id not in get_all_ids():
+def id_found(user_id):
+    if user_id not in get_all_ids():
         return False
     else:
         return True
@@ -59,31 +58,31 @@ def sign_up_user(name_input, password_input, confirm_input):
         now = str(datetime.now())
 
         cursor.execute("INSERT INTO users (name, password_hash, balance, date_created, transactions) VALUES (?,?,?,?,?)",
-                       (name_input, password_hash, 0, now, "_"))
+                       (name_input, password_hash, 0, now, ""))
         conn.commit()
 
         print(f"Added successfully, welcome {name_input}")
 
 
 
-def add_new_password(id, current_password):
+def add_new_password(user_id, current_password):
     password_hash = bcrypt.hashpw(current_password.encode(), bcrypt.gensalt()).decode()
 
     try:
-        cursor.execute("UPDATE users SET password_hash = (?) WHERE id = (?)", (password_hash, id))
+        cursor.execute("UPDATE users SET password_hash = (?) WHERE id = (?)", (password_hash, user_id))
         conn.commit()
         print("Password changed successfully")
     except sqlite3.Error:
         print("Something went wrong please try again")
 
-def change_name(id, new_name):
-    current_name = get_name(id)
+def change_name(user_id, new_name):
+    current_name = get_name(user_id)
     if current_name == new_name:
         print("New name same to current name")
         return
 
     try:
-        cursor.execute("UPDATE users SET name = (?) WHERE id = (?)", (new_name, id))
+        cursor.execute("UPDATE users SET name = (?) WHERE id = (?)", (new_name, user_id))
         conn.commit()
 
         print(f"Name updated successfully to {new_name}")
@@ -91,8 +90,8 @@ def change_name(id, new_name):
         print("Something went wrong, please try again")
 
 
-def get_bal(id):
-    cursor.execute("SELECT balance FROM users WHERE id = (?)", (id,))
+def get_bal(user_id):
+    cursor.execute("SELECT balance FROM users WHERE id = (?)", (user_id,))
     bal = cursor.fetchone()[0]
     return bal
 
@@ -120,18 +119,12 @@ def send_to_acc(sender, receiver, send_amount):
         cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (receiver_balance, receiver))
         conn.commit()
         print(f"SUCCESSFULLY SENT ${send_amount} to account-{receiver} your new balance is ${sender_balance}")
-        now = str(datetime.now())
-
-        sender_transaction = f"__Sent {send_amount} to acc:{receiver} at {now}, balance: {sender_balance}__"
-        receiver_transaction = f"__Received {send_amount} from acc:{sender} at {now}, balance: {receiver_balance}__"
 
     except sqlite3.Error:
         print("Something went wrong please try again")
 
-
-
-def deposit_to_acc(id, amount):
-    if not id_found(id):
+def deposit_to_acc(user_id, amount):
+    if not id_found(user_id):
         print("Error occurred, account not found")
         return
 
@@ -139,47 +132,38 @@ def deposit_to_acc(id, amount):
         print("Amount must be greater than 0")
         return
 
-    balance = get_bal(id)
+    balance = get_bal(user_id)
 
     try:
         balance = balance + amount
 
-        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, id))
+        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, user_id))
         conn.commit()
 
         print(f"Successfully deposited {amount}, new balance is ${balance}")
-        now = str(datetime.now())
-        transaction = f"__Deposited {amount} to account at {now} new balance: ${balance}"
 
     except sqlite3.Error:
         print("Something went wrong, please try again")
 
-
-
-
-
-def withdraw_from_acc(id, amount):
-    if not id_found(id):
+def withdraw_from_acc(user_id, amount):
+    if not id_found(user_id):
         print("Error occurred, account not found")
         return
     if amount <= 0:
         print("Amount must be greater than 0")
         return
-    if amount > get_bal(id):
+    if amount > get_bal(user_id):
         print("Amount greater than your balance, please try again")
         return
 
-    balance = get_bal(id)
+    balance = get_bal(user_id)
 
     try:
         balance = balance - amount
-        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, id))
+        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, user_id))
         conn.commit()
 
         print(f"Successfully withdrew {amount}, your new balance is ${balance}")
-
-        now = str(datetime.now())
-        transaction = f"__Withdrew {amount} from account at {now} new balance: ${balance}__"
 
     except sqlite3.Error:
         print("Something went wrong please try again")
