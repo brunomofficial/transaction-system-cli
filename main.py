@@ -36,6 +36,7 @@ def register():
 def sign_in():
     global allowed_attempts
     global user_id
+    allowed_attempts = 5
 
     while allowed_attempts > 0:
         lines()
@@ -61,7 +62,6 @@ def sign_in():
             name = cred.get_name(id_input)
             print(f"WELCOME {name}")
             home_menu()
-            allowed_attempts = 5
             lines()
             return
         else:
