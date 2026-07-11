@@ -35,6 +35,7 @@ def id_found(user_id):
     else:
         return True
 
+
 def validate_user(id_input, password_input):
     if id_input not in get_all_ids():
         return False

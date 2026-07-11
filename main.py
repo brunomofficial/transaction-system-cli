@@ -1,5 +1,6 @@
 import cred
 user_id = None
+allowed_attempts: int = 5
 
 def lines():
     print("------------------")
@@ -28,14 +29,18 @@ def register():
 
 # SIGN IN
 def sign_in():
+    global allowed_attempts
     global user_id
-    while True:
+
+    while allowed_attempts > 0:
         lines()
         print("Enter your credentials or 0 to go back")
         id_input = input("_Enter id> ").strip()
 
         if id_input == '0':
             return
+
+        allowed_attempts -= 1
 
         id_input = to_num(id_input)
 
@@ -51,10 +56,16 @@ def sign_in():
             name = cred.get_name(id_input)
             print(f"WELCOME {name}")
             home_menu()
+            allowed_attempts = 5
             lines()
             return
         else:
             print("Log in unsuccessful please try again")
+            print(f"You have {allowed_attempts} attempts left")
+
+            if allowed_attempts == 0:
+                exit(0)
+
             continue
 
 # HOME MENU
