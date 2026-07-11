@@ -9,8 +9,13 @@ def to_num(user_input):
     try:
         return int(user_input)
     except ValueError:
-        print("Error occurred")
+        print("Error, please enter numeric input")
         return None
+
+def format_cents(balance_cents):
+    dollars = balance_cents // 100
+    cents = balance_cents % 100
+    return f"{dollars}.{cents:02d}"
 
 # REGISTER
 def register():
@@ -44,7 +49,7 @@ def sign_in():
 
         id_input = to_num(id_input)
 
-        if not id_input:
+        if id_input is None or id_input <= 0:
             print("Please enter a valid id")
             continue
 
@@ -99,7 +104,7 @@ def account_info():
             case '1':
                 balance = cred.get_bal(user_id)
                 lines()
-                print(f"Your balance is ${balance}")
+                print(f"Your balance is ${format_cents(balance)}")
                 lines()
                 return
             case '2':
@@ -161,23 +166,22 @@ def change_password():
 def send():
     while True:
         lines()
-        receiver_acc = input("_Enter receiver account or 0 to go back>")
+        receiver_acc = input("_Enter receiver account or 0 to go back>").strip()
         if receiver_acc == "0":
             return
 
-        if to_num(receiver_acc):
-            receiver_acc = to_num(receiver_acc)
-        else:
+        receiver_acc = to_num(receiver_acc)
+        if receiver_acc is None or receiver_acc <= 0:
             print("Please enter valid id")
             continue
 
-        amount: str = input("Enter amount to send>")
-        if to_num(amount) <= 0:
-            print("Amount must be greater than 0")
-        if to_num(amount):
-            amount:int = to_num(amount)
-        else:
+        amount = input("Enter amount to send>").strip()
+        amount = to_num(amount)
+        if amount is None:
             print("Please enter valid amount")
+            continue
+        if amount <= 0:
+            print("Amount must be greater than 0")
             continue
 
         print(f"Send {amount} to {receiver_acc}?, enter 1 to confirm or 0 to cancel")
@@ -199,13 +203,14 @@ def deposit():
             continue
         if amount == '0':
             return
-        if not to_num(amount):
+        amount = to_num(amount)
+        if amount is None:
             print("Please enter a valid amount")
             continue
-        if to_num(amount) <= 0:
+        if amount <= 0:
             print("Amount must be greater than 0")
+            continue
 
-        amount = to_num(amount)
         cred.deposit_to_acc(user_id, amount)
         return
 
@@ -219,13 +224,14 @@ def withdraw():
             continue
         if amount == '0':
             return
-        if not to_num(amount):
+        amount = to_num(amount)
+        if amount is None:
             print("Please enter a valid amount")
             continue
-        if to_num(amount) <= 0:
+        if amount <= 0:
             print("Amount must be greater than 0")
+            continue
 
-        amount = to_num(amount)
         cred.withdraw_from_acc(user_id, amount)
         return
 

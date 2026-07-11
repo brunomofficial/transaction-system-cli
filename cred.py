@@ -58,12 +58,11 @@ def sign_up_user(name_input, password_input, confirm_input):
         password_hash = bcrypt.hashpw(password_input.encode(), bcrypt.gensalt()).decode()
         now = str(datetime.now())
 
-        cursor.execute("INSERT INTO users (name, password_hash, balance, date_created, transactions) VALUES (?,?,?,?,?)",
+        cursor.execute("INSERT INTO users (name, password_hash, balance_cents, date_created, transactions) VALUES (?,?,?,?,?)",
                        (name_input, password_hash, 0, now, ""))
         conn.commit()
 
         print(f"Added successfully, welcome {name_input}")
-
 
 
 def add_new_password(user_id, current_password):
@@ -90,14 +89,63 @@ def change_name(user_id, new_name):
     except sqlite3.Error as e:
         print("Something went wrong, please try again")
 
-
+# Get balance in cents
 def get_bal(user_id):
-    cursor.execute("SELECT balance FROM users WHERE id = (?)", (user_id,))
-    bal = cursor.fetchone()[0]
-    return bal
+    cursor.execute("SELECT balance_cents FROM users WHERE id = (?)", (user_id,))
+    bal_cents = cursor.fetchone()[0]
+    return bal_cents
 
+def format_cents(balance_cents):
+    dollars = balance_cents // 100
+    cents = balance_cents % 100
+    return f"{dollars}.{cents:02d}"
 
-def send_to_acc(sender, receiver, send_amount):
+def deposit_to_acc(user_id, amount_dollars):
+    if not id_found(user_id):
+        print("Error occurred, account not found")
+        return
+
+    if amount_dollars <= 0:
+        print("Amount must be greater than 0")
+        return
+
+    balance_cents = get_bal(user_id)
+
+    try:
+        balance_cents = balance_cents + (amount_dollars * 100)
+
+        cursor.execute("UPDATE users SET balance_cents = (?) WHERE id = (?)", (balance_cents, user_id))
+        conn.commit()
+
+        print(f"Successfully deposited {amount_dollars}, new balance is ${format_cents(balance_cents)}")
+
+    except sqlite3.Error:
+        print("Something went wrong, please try again")
+
+def withdraw_from_acc(user_id, amount_dollars):
+    if not id_found(user_id):
+        print("Error occurred, account not found")
+        return
+    if amount_dollars <= 0:
+        print("Amount must be greater than 0")
+        return
+    if amount_dollars * 100 > get_bal(user_id):
+        print("Amount greater than your balance, please try again")
+        return
+
+    balance_cents = get_bal(user_id)
+
+    try:
+        balance_cents = balance_cents - (amount_dollars * 100)
+        cursor.execute("UPDATE users SET balance_cents = (?) WHERE id = (?)", (balance_cents, user_id))
+        conn.commit()
+
+        print(f"Successfully withdrew {amount_dollars}, your new balance is ${format_cents(balance_cents)}")
+
+    except sqlite3.Error:
+        print("Something went wrong please try again")
+
+def send_to_acc(sender, receiver, send_amount_dollars):
     if not id_found(receiver):
         print("Something went wrong please try again")
         return
@@ -105,67 +153,21 @@ def send_to_acc(sender, receiver, send_amount):
         print("Error, can't send to your own account")
         return
 
-    sender_balance = get_bal(sender)
-    if send_amount > sender_balance:
+    sender_balance_cents = get_bal(sender)
+    if send_amount_dollars * 100 > sender_balance_cents:
         print("Amount cannot be greater than your balance")
         return
 
-    receiver_balance = get_bal(receiver)
+    receiver_balance_cents = get_bal(receiver)
 
     try:
-        sender_balance = sender_balance - send_amount
-        receiver_balance = receiver_balance + send_amount
+        sender_balance_cents = sender_balance_cents - (send_amount_dollars * 100)
+        receiver_balance_cents = receiver_balance_cents + (send_amount_dollars * 100)
 
-        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (sender_balance, sender))
-        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (receiver_balance, receiver))
+        cursor.execute("UPDATE users SET balance_cents = (?) WHERE id = (?)", (sender_balance_cents, sender))
+        cursor.execute("UPDATE users SET balance_cents = (?) WHERE id = (?)", (receiver_balance_cents, receiver))
         conn.commit()
-        print(f"SUCCESSFULLY SENT ${send_amount} to account-{receiver} your new balance is ${sender_balance}")
+        print(f"SUCCESSFULLY SENT ${send_amount_dollars} to account-{receiver} your new balance is ${format_cents(sender_balance_cents)}")
 
     except sqlite3.Error:
         print("Something went wrong please try again")
-
-def deposit_to_acc(user_id, amount):
-    if not id_found(user_id):
-        print("Error occurred, account not found")
-        return
-
-    if amount <= 0:
-        print("Amount must be greater than 0")
-        return
-
-    balance = get_bal(user_id)
-
-    try:
-        balance = balance + amount
-
-        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, user_id))
-        conn.commit()
-
-        print(f"Successfully deposited {amount}, new balance is ${balance}")
-
-    except sqlite3.Error:
-        print("Something went wrong, please try again")
-
-def withdraw_from_acc(user_id, amount):
-    if not id_found(user_id):
-        print("Error occurred, account not found")
-        return
-    if amount <= 0:
-        print("Amount must be greater than 0")
-        return
-    if amount > get_bal(user_id):
-        print("Amount greater than your balance, please try again")
-        return
-
-    balance = get_bal(user_id)
-
-    try:
-        balance = balance - amount
-        cursor.execute("UPDATE users SET balance = (?) WHERE id = (?)", (balance, user_id))
-        conn.commit()
-
-        print(f"Successfully withdrew {amount}, your new balance is ${balance}")
-
-    except sqlite3.Error:
-        print("Something went wrong please try again")
-
