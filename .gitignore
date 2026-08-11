@@ -1,4 +1,6 @@
 .idea/
 test.py
+cred.py
 database.sqbpro
+database.db
 __pycache__/
